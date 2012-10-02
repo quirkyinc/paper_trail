@@ -98,7 +98,7 @@ module PaperTrail
       end
 
       def record_update
-        if switched_on? && changed_notably?
+        if switched_on? && changed_notably? and not object_id_nil?
           versions.build merge_metadata(:event     => 'update',
                                         :object    => object_to_string(item_before_change),
                                         :whodunnit => PaperTrail.whodunnit)
@@ -154,6 +154,11 @@ module PaperTrail
       def switched_on?
         PaperTrail.enabled? && self.class.paper_trail_active
       end
+
+      def object_id_nil?
+        return item_before_change.id.nil?
+      end
+
     end
 
   end
