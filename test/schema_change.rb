@@ -1,3 +1,3 @@
 ActiveRecord::Schema.define do
-  remove_column :widgets, :sacrificial_column
+  remove_column :base_widgets, :sacrificial_column
 end

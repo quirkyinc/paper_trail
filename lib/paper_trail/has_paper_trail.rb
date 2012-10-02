@@ -37,9 +37,9 @@ module PaperTrail
 
         has_many :versions, :as => :item, :order => 'created_at ASC, id ASC'
 
-        after_create  :record_create
-        before_update :record_update
-        after_destroy :record_destroy
+        after_create  :record_create,  :if => Proc.new { !options[:on] || options[:on].include?(:create) }
+        before_update :record_update,  :if => Proc.new { !options[:on] || options[:on].include?(:update) }
+        after_destroy :record_destroy, :if => Proc.new { !options[:on] || options[:on].include?(:destroy) }
       end
 
       # Switches PaperTrail off for this class.

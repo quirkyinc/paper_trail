@@ -1,12 +1,28 @@
 require 'test_helper'
 
-class Widget < ActiveRecord::Base
+class BaseWidget < ActiveRecord::Base
+  # don't do anything so can specify in subclasses
+end
+
+class Widget < BaseWidget
   has_paper_trail
   has_one :wotsit
   has_many :fluxors, :order => :name
 end
 
 class FooWidget < Widget
+end
+
+class WidgetNoCreate < BaseWidget
+  has_paper_trail :on => [:update, :destroy]
+end
+
+class WidgetNoUpdate < BaseWidget
+  has_paper_trail :on => [:create, :destroy]
+end
+
+class WidgetNoDestroy < BaseWidget
+  has_paper_trail :on => [:create, :update]
 end
 
 class Wotsit < ActiveRecord::Base
@@ -785,6 +801,77 @@ class HasPaperTrailModelTest < Test::Unit::TestCase
     end
     should 'not have a version created on destroy' do
       assert @widget.versions.empty?
+    end
+  end
+
+  context 'A model who specifies to ignore create' do
+    setup do
+      @widget = WidgetNoCreate.create(:name => 'Tom')
+    end
+
+    should 'not have a version created on create' do
+      assert_equal 0, @widget.versions.length
+    end
+
+    should 'have a version on update' do
+      @widget.update_attributes! :name => 'Dick'
+      assert_equal 1, @widget.versions.length
+      assert_equal 'update', @widget.versions.last.event
+    end
+
+    should 'have a version on destroy' do
+      @widget.update_attributes! :name => 'Jane'
+      @widget.destroy
+      assert_equal 2, @widget.versions.length
+      assert_equal 'destroy', @widget.versions.last.event
+    end
+  end
+
+  context 'A model who specifies to ignore update' do
+    setup do
+      @widget = WidgetNoUpdate.create(:name => 'Tom')
+    end
+
+    should 'have a version for create' do
+      assert_equal 1, @widget.versions.length
+      assert_equal 'create', @widget.versions.last.event
+    end
+
+    should 'not have a version on update' do
+      @widget.update_attributes! :name => 'Dick'
+      assert_equal 1, @widget.versions.length
+      assert_equal 'create', @widget.versions.last.event
+    end
+
+    should 'have a version on destroy' do
+      @widget.update_attributes! :name => 'Jane'
+      @widget.destroy
+      assert_equal 2, @widget.versions.length
+      assert_equal 'destroy', @widget.versions.last.event
+    end
+  end
+
+  context 'A model who specifies to ignore destroy' do
+    setup do
+      @widget = WidgetNoDestroy.create(:name => 'Tom')
+    end
+
+    should 'have a version created on create' do
+      assert_equal 1, @widget.versions.length
+      assert_equal 'create', @widget.versions.last.event
+    end
+
+    should 'have a version on update' do
+      @widget.update_attributes! :name => 'Dick'
+      assert_equal 2, @widget.versions.length
+      assert_equal 'update', @widget.versions.last.event
+    end
+
+    should 'not have a version on destroy' do
+      @widget.update_attributes! :name => 'Jane'
+      @widget.destroy
+      assert_equal 2, @widget.versions.length
+      assert_equal 'update', @widget.versions.last.event
     end
   end
 

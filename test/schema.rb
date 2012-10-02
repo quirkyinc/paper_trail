@@ -1,6 +1,6 @@
 ActiveRecord::Schema.define(:version => 0) do
 
-  create_table :widgets, :force => true do |t|
+  create_table :base_widgets, :force => true do |t|
     t.string    :name
     t.text      :a_text
     t.integer   :an_integer
